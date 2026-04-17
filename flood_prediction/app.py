@@ -10,7 +10,7 @@ from tensorflow.keras.models import load_model
 app = Flask(__name__)
 
 # Load model
-model = load_model("model.h5")
+model = load_model("model.h5", compile=False)
 scaler = pickle.load(open("scaler.pkl", "rb"))
 columns = pickle.load(open("columns.pkl", "rb"))
 
