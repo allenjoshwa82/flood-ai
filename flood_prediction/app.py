@@ -11,7 +11,7 @@ import tensorflow as tf
 app = Flask(__name__)
 
 # Load model
-model = load_model("model.h5", compile=False)
+model = load_model("model.keras")
 model.compile(
     optimizer='adam',
     loss='binary_crossentropy',
