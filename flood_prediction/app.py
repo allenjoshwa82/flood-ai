@@ -6,11 +6,17 @@ import smtplib
 import pandas as pd
 
 from tensorflow.keras.models import load_model
+import tensorflow as tf
 
 app = Flask(__name__)
 
 # Load model
 model = load_model("model.h5", compile=False)
+model.compile(
+    optimizer='adam',
+    loss='binary_crossentropy',
+    metrics=['accuracy']
+)
 scaler = pickle.load(open("scaler.pkl", "rb"))
 columns = pickle.load(open("columns.pkl", "rb"))
 
