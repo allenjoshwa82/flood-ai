@@ -11,12 +11,8 @@ import tensorflow as tf
 app = Flask(__name__)
 
 # Load model
-model = load_model("model.keras")
-model.compile(
-    optimizer='adam',
-    loss='binary_crossentropy',
-    metrics=['accuracy']
-)
+model = load_model("model.keras", compile=False)
+
 scaler = pickle.load(open("scaler.pkl", "rb"))
 columns = pickle.load(open("columns.pkl", "rb"))
 
