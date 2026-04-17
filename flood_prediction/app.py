@@ -11,7 +11,7 @@ import tensorflow as tf
 app = Flask(__name__)
 
 # Load model
-model = load_model("model_final.keras", compile=False)
+model = load_model("model_clean.keras", compile=False)
 
 scaler = pickle.load(open("scaler.pkl", "rb"))
 columns = pickle.load(open("columns.pkl", "rb"))
