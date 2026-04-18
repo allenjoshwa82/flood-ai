@@ -148,4 +148,4 @@ def predict():
 
 import os
 
-    app = app
+app = app
