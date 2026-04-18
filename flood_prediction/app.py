@@ -7,19 +7,16 @@ import pandas as pd
 
 from tensorflow.keras.models import load_model
 import tensorflow as tf
+import os
 
 app = Flask(__name__)
 
 # Load model
-try:
-    model = load_model("model_clean.keras", compile=False)
-    print("✅ Model Loaded Successfully")
-except Exception as e:
-    print("❌ Model Load Failed:", e)
-    model = None
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-scaler = pickle.load(open("scaler.pkl", "rb"))
-columns = pickle.load(open("columns.pkl", "rb"))
+model = load_model(os.path.join(BASE_DIR, "model_clean.keras"), compile=False)
+scaler = pickle.load(open(os.path.join(BASE_DIR, "scaler.pkl"), "rb"))
+columns = pickle.load(open(os.path.join(BASE_DIR, "columns.pkl"), "rb"))
 
 # 🌍 NASA DATA (SAFE VERSION)
 def get_nasa_data(lat, lon):
