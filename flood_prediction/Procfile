@@ -1,1 +1,1 @@
-web: gunicorn flood_prediction.app:app --bind 0.0.0.0:$PORT
+web: gunicorn flood_prediction.app:app
