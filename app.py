@@ -6,10 +6,11 @@ from tensorflow.keras.models import load_model
 
 app = Flask(__name__)
 
-# Load model + files
-model = load_model("model_clean.keras")
+# ✅ Load model (FIXED)
+model = load_model("model_fixed.h5", compile=False)
+
+# Load scaler
 scaler = pickle.load(open("scaler.pkl", "rb"))
-columns = pickle.load(open("columns.pkl", "rb"))
 
 # Home
 @app.route("/")
@@ -22,7 +23,6 @@ def predict():
     try:
         data = request.form
 
-        # Input values
         input_data = [
             float(data["river"]),
             float(data["water"]),
@@ -32,23 +32,16 @@ def predict():
             float(data["history"])
         ]
 
-        # Encode categorical
-        land = data["land"]
-        soil = data["soil"]
-
         land_map = {"Agricultural": 0, "Forest": 1, "Urban": 2}
         soil_map = {"Clay": 0, "Sandy": 1, "Loamy": 2}
 
-        input_data.append(land_map[land])
-        input_data.append(soil_map[soil])
+        input_data.append(land_map[data["land"]])
+        input_data.append(soil_map[data["soil"]])
 
-        # Scale
         final_input = scaler.transform([input_data])
 
-        # Predict
-        prediction = model.predict(final_input)[0][0]
+        prediction = float(model.predict(final_input)[0][0])
 
-        # Convert to readable output
         if prediction > 0.7:
             result = f"HIGH RISK 🚨 ({round(prediction*100,2)}%)"
         elif prediction > 0.4:
@@ -59,9 +52,9 @@ def predict():
         return render_template("index.html", prediction_text=result)
 
     except Exception as e:
-        return str(e)
+        return f"Error: {str(e)}"
 
-# Chatbot (basic AI upgrade)
+# Chatbot
 @app.route("/chat", methods=["POST"])
 def chat():
     msg = request.form["message"].lower()
@@ -69,14 +62,12 @@ def chat():
     if "flood" in msg:
         reply = "Floods happen due to heavy rainfall, river overflow, or poor drainage."
     elif "safety" in msg:
-        reply = "Move to higher ground, avoid water, and keep emergency supplies ready."
-    elif "precaution" in msg:
-        reply = "Monitor weather alerts and keep evacuation plans ready."
+        reply = "Move to higher ground and avoid flooded areas."
     else:
-        reply = "I can help with flood risks, safety tips, and predictions."
+        reply = "Ask me about flood risk or safety tips."
 
     return jsonify({"reply": reply})
 
-# ✅ IMPORTANT (Render Fix)
+# ✅ Required for Render
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
