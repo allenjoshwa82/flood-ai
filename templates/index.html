@@ -14,15 +14,20 @@
 
         .container {
             width: 420px;
-            margin: 40px auto;
+            margin: 30px auto;
             background: rgba(255,255,255,0.95);
             padding: 25px;
             border-radius: 15px;
             box-shadow: 0px 10px 30px rgba(0,0,0,0.3);
         }
 
-        h2 {
+        h2 { text-align: center; }
+
+        .subtitle {
             text-align: center;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 10px;
         }
 
         input, select {
@@ -43,9 +48,7 @@
             cursor: pointer;
         }
 
-        button:hover {
-            transform: scale(1.05);
-        }
+        button:hover { transform: scale(1.05); }
 
         .result {
             margin-top: 15px;
@@ -69,7 +72,7 @@
         }
 
         #map {
-            height: 300px;
+            height: 320px;
             width: 90%;
             margin: 20px auto;
             border-radius: 10px;
@@ -81,8 +84,9 @@
 
 <div class="container">
     <h2>🌊 Flood Prediction AI</h2>
+    <p class="subtitle">AI-powered disaster prediction system 🌍</p>
 
-    <form action="/predict" method="post">
+    <form action="/predict" method="post" onsubmit="loading()">
 
         <input name="river" placeholder="River Discharge" required>
         <input name="water" placeholder="Water Level" required>
@@ -104,11 +108,11 @@
         <input name="infra" placeholder="Infrastructure (0/1)" required>
         <input name="history" placeholder="Historical Floods" required>
 
-        <button type="submit">🚀 Predict Risk</button>
+        <button id="predictBtn" type="submit">🚀 Predict Risk</button>
     </form>
 
     {% if prediction_text %}
-    <div class="result 
+    <div id="resultBox" class="result 
         {% if 'HIGH' in prediction_text %}high
         {% elif 'MEDIUM' in prediction_text %}medium
         {% else %}low{% endif %}">
@@ -131,7 +135,13 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
-// Chatbot
+
+// 🔄 Loading button
+function loading(){
+    document.getElementById("predictBtn").innerText = "Predicting...";
+}
+
+// 🤖 Chatbot
 function sendMsg(){
     let msg = document.getElementById("msg").value;
 
@@ -143,19 +153,45 @@ function sendMsg(){
     .then(res => res.json())
     .then(data => {
         document.getElementById("reply").innerText = data.reply;
+        document.getElementById("msg").value = "";
     });
 }
 
-// Map (Chennai)
+// 🌍 Map
 var map = L.map('map').setView([13.08, 80.27], 10);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap'
-}).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-L.marker([13.08, 80.27]).addTo(map)
-    .bindPopup("📍 Chennai Flood Monitoring Area")
-    .openPopup();
+// 📍 Auto location
+navigator.geolocation.getCurrentPosition(function(pos){
+    var lat = pos.coords.latitude;
+    var lon = pos.coords.longitude;
+
+    map.setView([lat, lon], 12);
+
+    L.marker([lat, lon]).addTo(map)
+        .bindPopup("📍 Your Location")
+        .openPopup();
+});
+
+// 🎯 Show risk marker dynamically
+var resultBox = document.getElementById("resultBox");
+
+if(resultBox){
+    let text = resultBox.innerText;
+
+    let color = "green";
+
+    if(text.includes("HIGH")) color = "red";
+    else if(text.includes("MEDIUM")) color = "orange";
+
+    L.circleMarker(map.getCenter(), {
+        color: color,
+        radius: 12
+    }).addTo(map)
+      .bindPopup("Prediction Result")
+      .openPopup();
+}
 
 </script>
 
