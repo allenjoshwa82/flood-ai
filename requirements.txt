@@ -6,4 +6,6 @@ scikit-learn==1.2.2
 flask==2.2.5
 gunicorn==20.1.0
 requests==2.31.0
-setuptools
+
+# ✅ FIX FOR pkg_resources
+setuptools==68.0.0
