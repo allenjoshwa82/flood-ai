@@ -6,73 +6,92 @@ from tensorflow.keras.models import load_model
 
 app = Flask(__name__)
 
-# ✅ Load model (FIXED)
-from tensorflow.keras import Input, Model
-from tensorflow.keras.layers import Dense
-import numpy as np
-
-# ✅ Rebuild architecture manually
-inputs = Input(shape=(21,))
-x = Dense(64, activation='relu')(inputs)
-x = Dense(32, activation='relu')(x)
-outputs = Dense(1, activation='sigmoid')(x)
-
-model = Model(inputs, outputs)
-
-# ✅ Load weights only (NO config loading)
-
-
-# Load scaler
-import os
-
+# -------------------------
+# BASE PATH (Render safe)
+# -------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-scaler_path = os.path.join(BASE_DIR, "scaler.pkl")
 
-scaler = pickle.load(open(scaler_path, "rb"))
+# -------------------------
+# LOAD MODEL + SCALER
+# -------------------------
+model = load_model(
+    os.path.join(BASE_DIR, "model_fixed.h5"),
+    compile=False
+)
 
-# Home
+scaler = pickle.load(
+    open(os.path.join(BASE_DIR, "scaler.pkl"), "rb")
+)
+
+# -------------------------
+# HOME
+# -------------------------
 @app.route("/")
 def home():
     return render_template("index.html")
 
-# Prediction
+# -------------------------
+# PREDICTION
+# -------------------------
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
         data = request.form
 
+        # Categorical encoding
+        land_map = {
+            "Agricultural": 0,
+            "Forest": 1,
+            "Urban": 2,
+            "Water Body": 3
+        }
+
+        soil_map = {
+            "Clay": 0,
+            "Sandy": 1,
+            "Loamy": 2
+        }
+
+        # -------------------------
+        # MUST MATCH TRAINING ORDER
+        # -------------------------
         input_data = [
-            float(data["river"]),
-            float(data["water"]),
+            float(data["rainfall"]),
+            float(data["temperature"]),
+            float(data["humidity"]),
+            float(data["river_discharge"]),
+            float(data["water_level"]),
             float(data["elevation"]),
-            float(data["pop"]),
-            float(data["infra"]),
-            float(data["history"])
+            float(data["population_density"]),
+            float(data["infrastructure"]),
+            float(data["historical_floods"]),
+            land_map[data["land"]],
+            soil_map[data["soil"]]
         ]
 
-        land_map = {"Agricultural": 0, "Forest": 1, "Urban": 2}
-        soil_map = {"Clay": 0, "Sandy": 1, "Loamy": 2}
+        # Scale input
+        final_input = scaler.transform([input_data])
 
-        input_data.append(land_map[data["land"]])
-        input_data.append(soil_map[data["soil"]])
-
-        final_input = scaler.transform([[0]*11])
-
+        # Predict
         prediction = float(model.predict(final_input)[0][0])
 
+        # Output logic
         if prediction > 0.7:
-            result = f"HIGH RISK 🚨 ({round(prediction*100,2)}%)"
+            result = f"HIGH RISK 🚨 ({round(prediction * 100, 2)}%)"
         elif prediction > 0.4:
-            result = f"MEDIUM RISK ⚠️ ({round(prediction*100,2)}%)"
+            result = f"MEDIUM RISK ⚠️ ({round(prediction * 100, 2)}%)"
         else:
-            result = f"LOW RISK ✅ ({round(prediction*100,2)}%)"
+            result = f"LOW RISK ✅ ({round(prediction * 100, 2)}%)"
 
         return render_template("index.html", prediction_text=result)
 
     except Exception as e:
         return f"Error: {str(e)}"
 
-# Chatbot
+
+# -------------------------
+# CHATBOT
+# -------------------------
 @app.route("/chat", methods=["POST"])
 def chat():
     msg = request.form["message"].lower()
@@ -81,11 +100,17 @@ def chat():
         reply = "Floods happen due to heavy rainfall, river overflow, or poor drainage."
     elif "safety" in msg:
         reply = "Move to higher ground and avoid flooded areas."
+    elif "precaution" in msg:
+        reply = "Monitor weather alerts and keep emergency kits ready."
     else:
-        reply = "Ask me about flood risk or safety tips."
+        reply = "Ask me about flood risk, safety tips, or predictions."
 
     return jsonify({"reply": reply})
 
-# ✅ Required for Render
+
+# -------------------------
+# RENDER ENTRY POINT
+# -------------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
