@@ -4,21 +4,36 @@ import pickle
 import requests
 import smtplib
 import pandas as pd
-
+import os
 from tensorflow.keras.models import load_model
 import tensorflow as tf
-import os
+
+# Reduce TF logs
+tf.get_logger().setLevel('ERROR')
 
 app = Flask(__name__)
 
-# Load model
+# Base directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-model = load_model(os.path.join(BASE_DIR, "model_clean.keras"), compile=False)
-scaler = pickle.load(open(os.path.join(BASE_DIR, "scaler.pkl"), "rb"))
-columns = pickle.load(open(os.path.join(BASE_DIR, "columns.pkl"), "rb"))
+# 🔥 Lazy loading variables
+model = None
+scaler = None
+columns = None
 
-# 🌍 NASA DATA (SAFE VERSION)
+# 🔥 Load model only when needed
+def load_artifacts():
+    global model, scaler, columns
+
+    if model is None:
+        print("🔄 Loading model...")
+        model = load_model(os.path.join(BASE_DIR, "model_clean.keras"), compile=False)
+        scaler = pickle.load(open(os.path.join(BASE_DIR, "scaler.pkl"), "rb"))
+        columns = pickle.load(open(os.path.join(BASE_DIR, "columns.pkl"), "rb"))
+        print("✅ Model loaded")
+
+
+# 🌍 NASA DATA
 def get_nasa_data(lat, lon):
     try:
         url = f"https://power.larc.nasa.gov/api/temporal/daily/point?parameters=PRECTOT,T2M,RH2M&community=AG&longitude={lon}&latitude={lat}&format=JSON"
@@ -35,22 +50,17 @@ def get_nasa_data(lat, lon):
         return rainfall, temp, humidity
 
     except:
-        # fallback values
         return 10, 30, 70
 
 
-# 📧 EMAIL ALERT (SAFE)
+# 📧 EMAIL ALERT
 def send_email(msg):
     try:
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
-
-        # ⚠️ Replace with your credentials
         server.login("your_email@gmail.com", "your_app_password")
-
         server.sendmail("your_email@gmail.com", "receiver@gmail.com", msg)
         server.quit()
-
     except Exception as e:
         print("Email failed:", e)
 
@@ -73,13 +83,16 @@ def chat():
 # 🏠 HOME
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return "Flood Prediction App is Running ✅"
 
 
 # 🔮 PREDICTION
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
+        # 🔥 Load model here
+        load_artifacts()
+
         # 🌍 Live NASA data
         rainfall, temperature, humidity = get_nasa_data(13.08, 80.27)
 
@@ -128,10 +141,9 @@ def predict():
         # Prediction
         pred = model.predict(df)
 
-        # Safe extraction
         pred_value = float(pred[0][0]) if len(pred.shape) > 1 else float(pred[0])
 
-        # Result logic
+        # Result
         if pred_value > 0.7:
             result = "HIGH RISK 🚨"
             send_email("⚠️ Flood Alert: HIGH RISK!")
@@ -140,12 +152,7 @@ def predict():
         else:
             result = "LOW RISK ✅"
 
-        return render_template("index.html", prediction_text=result)
+        return result
 
     except Exception as e:
         return f"Error: {str(e)}"
-
-
-import os
-
-app = app
