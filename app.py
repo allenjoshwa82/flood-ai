@@ -7,7 +7,20 @@ from tensorflow.keras.models import load_model
 app = Flask(__name__)
 
 # ✅ Load model (FIXED)
-model = load_model("model_fixed.h5", compile=False)
+from tensorflow.keras import Input, Model
+from tensorflow.keras.layers import Dense
+import numpy as np
+
+# ✅ Rebuild architecture manually
+inputs = Input(shape=(21,))
+x = Dense(64, activation='relu')(inputs)
+x = Dense(32, activation='relu')(x)
+outputs = Dense(1, activation='sigmoid')(x)
+
+model = Model(inputs, outputs)
+
+# ✅ Load weights only (NO config loading)
+model.load_weights("model_fixed.h5")
 
 # Load scaler
 scaler = pickle.load(open("scaler.pkl", "rb"))
