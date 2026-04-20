@@ -20,7 +20,7 @@ outputs = Dense(1, activation='sigmoid')(x)
 model = Model(inputs, outputs)
 
 # ✅ Load weights only (NO config loading)
-model.load_weights("model.weights.h5")
+
 
 # Load scaler
 scaler = pickle.load(open("scaler.pkl", "rb"))
