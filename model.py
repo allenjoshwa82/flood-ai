@@ -6,7 +6,13 @@ from sklearn.preprocessing import StandardScaler
 import pickle
 
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dense, Input
+
+model = Sequential([
+    Input(shape=(21,)),   # ✅ THIS FIXES batch_shape issue
+    Dense(64, activation='relu'),
+    Dense(1, activation='sigmoid')
+])
 
 # Load dataset
 data = pd.read_csv("flood_data.csv")
@@ -39,7 +45,7 @@ model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy']
 model.fit(X_train, y_train, epochs=20, batch_size=32)
 
 # Save model + scaler + columns
-model.save("model.h5")
+model.save("model_clean.keras") 
 
 pickle.dump(scaler, open("scaler.pkl", "wb"))
 pickle.dump(X.columns.tolist(), open("columns.pkl", "wb"))
