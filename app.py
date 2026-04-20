@@ -23,7 +23,12 @@ model = Model(inputs, outputs)
 
 
 # Load scaler
-scaler = pickle.load(open("scaler.pkl", "rb"))
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+scaler_path = os.path.join(BASE_DIR, "scaler.pkl")
+
+scaler = pickle.load(open(scaler_path, "rb"))
 
 # Home
 @app.route("/")
