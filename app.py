@@ -7,7 +7,7 @@ from tensorflow.keras.models import load_model
 app = Flask(__name__)
 
 # ✅ Load model (FIXED)
-model = load_model("model_fixed.h5", compile=False)
+model = load_model("model_clean.keras", compile=False, safe_mode=False)
 
 # Load scaler
 scaler = pickle.load(open("scaler.pkl", "rb"))
