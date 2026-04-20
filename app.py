@@ -31,14 +31,13 @@ def home():
     return render_template("index.html")
 
 # -------------------------
-# PREDICTION
+# PREDICTION (FIXED & SAFE)
 # -------------------------
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
         data = request.form
 
-        # Categorical encoding
         land_map = {
             "Agricultural": 0,
             "Forest": 1,
@@ -53,29 +52,31 @@ def predict():
         }
 
         # -------------------------
-        # MUST MATCH TRAINING ORDER
+        # EXACT FEATURE ORDER (MUST MATCH TRAINING)
         # -------------------------
         input_data = [
-            float(data["rainfall"]),
-            float(data["temperature"]),
-            float(data["humidity"]),
-            float(data["river_discharge"]),
-            float(data["water_level"]),
-            float(data["elevation"]),
-            float(data["population_density"]),
-            float(data["infrastructure"]),
-            float(data["historical_floods"]),
-            land_map[data["land"]],
-            soil_map[data["soil"]]
+            float(data.get("rainfall", 0)),
+            float(data.get("temperature", 0)),
+            float(data.get("humidity", 0)),
+            float(data.get("river_discharge", 0)),
+            float(data.get("water_level", 0)),
+            float(data.get("elevation", 0)),
+            float(data.get("population_density", 0)),
+            float(data.get("infrastructure", 0)),
+            float(data.get("historical_floods", 0)),
+            land_map.get(data.get("land", "Urban"), 2),
+            soil_map.get(data.get("soil", "Loamy"), 2)
         ]
 
         # Scale input
         final_input = scaler.transform([input_data])
 
         # Predict
-        prediction = float(model.predict(final_input)[0][0])
+        prediction = float(model.predict(final_input, verbose=0)[0][0])
 
-        # Output logic
+        # -------------------------
+        # RESULT LOGIC
+        # -------------------------
         if prediction > 0.7:
             result = f"HIGH RISK 🚨 ({round(prediction * 100, 2)}%)"
         elif prediction > 0.4:
@@ -94,7 +95,7 @@ def predict():
 # -------------------------
 @app.route("/chat", methods=["POST"])
 def chat():
-    msg = request.form["message"].lower()
+    msg = request.form.get("message", "").lower()
 
     if "flood" in msg:
         reply = "Floods happen due to heavy rainfall, river overflow, or poor drainage."
