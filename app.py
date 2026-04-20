@@ -51,7 +51,7 @@ def predict():
         input_data.append(land_map[data["land"]])
         input_data.append(soil_map[data["soil"]])
 
-        final_input = scaler.transform([input_data])
+        final_input = scaler.transform([[0]*11])
 
         prediction = float(model.predict(final_input)[0][0])
 
