@@ -12,16 +12,26 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # -------------------------
-# LOAD MODEL + SCALER
+# LOAD MODEL + SCALER (SAFE)
 # -------------------------
-model = load_model(
-    os.path.join(BASE_DIR, "model_fixed.h5"),
-    compile=False
-)
+try:
+    model = load_model(
+        os.path.join(BASE_DIR, "model_fixed.h5"),
+        compile=False
+    )
+    print("✅ Model Loaded Successfully")
+except Exception as e:
+    print("❌ MODEL LOAD ERROR:", e)
+    model = None
 
-scaler = pickle.load(
-    open(os.path.join(BASE_DIR, "scaler.pkl"), "rb")
-)
+try:
+    scaler = pickle.load(
+        open(os.path.join(BASE_DIR, "scaler.pkl"), "rb")
+    )
+    print("✅ Scaler Loaded Successfully")
+except Exception as e:
+    print("❌ SCALER LOAD ERROR:", e)
+    scaler = None
 
 # -------------------------
 # HOME
@@ -31,13 +41,19 @@ def home():
     return render_template("index.html")
 
 # -------------------------
-# PREDICTION (FIXED & SAFE)
+# PREDICTION
 # -------------------------
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
+        if model is None or scaler is None:
+            return "❌ Model or Scaler not loaded properly"
+
         data = request.form
 
+        # -------------------------
+        # CATEGORY MAPS (UPDATED)
+        # -------------------------
         land_map = {
             "Agricultural": 0,
             "Forest": 1,
@@ -48,11 +64,12 @@ def predict():
         soil_map = {
             "Clay": 0,
             "Sandy": 1,
-            "Loamy": 2
+            "Loamy": 2,
+            "Peat": 3   # ✅ FIXED
         }
 
         # -------------------------
-        # EXACT FEATURE ORDER (MUST MATCH TRAINING)
+        # FEATURE ORDER (CRITICAL)
         # -------------------------
         input_data = [
             float(data.get("rainfall", 0)),
@@ -68,10 +85,13 @@ def predict():
             soil_map.get(data.get("soil", "Loamy"), 2)
         ]
 
-        # Scale input
-        final_input = scaler.transform([input_data])
+        # Debug log (Render logs)
+        print("📊 INPUT DATA:", input_data)
 
-        # Predict
+        # -------------------------
+        # SCALE + PREDICT
+        # -------------------------
+        final_input = scaler.transform([input_data])
         prediction = float(model.predict(final_input, verbose=0)[0][0])
 
         # -------------------------
@@ -87,6 +107,7 @@ def predict():
         return render_template("index.html", prediction_text=result)
 
     except Exception as e:
+        print("❌ PREDICTION ERROR:", e)
         return f"Error: {str(e)}"
 
 
