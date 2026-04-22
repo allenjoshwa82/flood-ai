@@ -91,7 +91,23 @@ def predict():
         # -------------------------
         # SCALE + PREDICT
         # -------------------------
-        final_input = scaler.transform([input_data])
+       columns = [
+    "rainfall",
+    "temperature",
+    "humidity",
+    "River Discharge (m³/s)",
+    "Water Level (m)",
+    "Elevation (m)",
+    "Population Density",
+    "Infrastructure",
+    "Historical Floods",
+    "Land Cover",
+    "Soil Type"
+]
+
+input_df = pd.DataFrame([input_data], columns=columns)
+
+final_input = scaler.transform(input_df)
         prediction = float(model.predict(final_input, verbose=0)[0][0])
 
         # -------------------------
