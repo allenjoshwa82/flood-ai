@@ -1,6 +1,8 @@
 import os
 import numpy as np
 import pickle
+import pandas as pd   # ✅ ADDED
+
 from flask import Flask, request, render_template, jsonify
 from tensorflow.keras.models import load_model
 
@@ -52,7 +54,7 @@ def predict():
         data = request.form
 
         # -------------------------
-        # CATEGORY MAPS (UPDATED)
+        # CATEGORY MAPS
         # -------------------------
         land_map = {
             "Agricultural": 0,
@@ -65,7 +67,7 @@ def predict():
             "Clay": 0,
             "Sandy": 1,
             "Loamy": 2,
-            "Peat": 3   # ✅ FIXED
+            "Peat": 3
         }
 
         # -------------------------
@@ -85,29 +87,33 @@ def predict():
             soil_map.get(data.get("soil", "Loamy"), 2)
         ]
 
-        # Debug log (Render logs)
+        # Debug log
         print("📊 INPUT DATA:", input_data)
 
         # -------------------------
-        # SCALE + PREDICT
+        # FIXED: USE DATAFRAME (NO WARNING)
         # -------------------------
-       columns = [
-    "rainfall",
-    "temperature",
-    "humidity",
-    "River Discharge (m³/s)",
-    "Water Level (m)",
-    "Elevation (m)",
-    "Population Density",
-    "Infrastructure",
-    "Historical Floods",
-    "Land Cover",
-    "Soil Type"
-]
+        columns = [
+            "rainfall",
+            "temperature",
+            "humidity",
+            "River Discharge (m³/s)",
+            "Water Level (m)",
+            "Elevation (m)",
+            "Population Density",
+            "Infrastructure",
+            "Historical Floods",
+            "Land Cover",
+            "Soil Type"
+        ]
 
-input_df = pd.DataFrame([input_data], columns=columns)
+        input_df = pd.DataFrame([input_data], columns=columns)
 
-final_input = scaler.transform(input_df)
+        final_input = scaler.transform(input_df)
+
+        # -------------------------
+        # PREDICT
+        # -------------------------
         prediction = float(model.predict(final_input, verbose=0)[0][0])
 
         # -------------------------
@@ -147,7 +153,7 @@ def chat():
 
 
 # -------------------------
-# RENDER ENTRY POINT
+# ENTRY POINT
 # -------------------------
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
