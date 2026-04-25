@@ -86,31 +86,36 @@
     <h2>🌊 Flood Prediction AI</h2>
     <p class="subtitle">AI-powered disaster prediction system 🌍</p>
 
-    <form action="/predict" method="post" onsubmit="loading()">
+   <form action="/predict" method="post" onsubmit="loading()">
 
-        <input name="river" placeholder="River Discharge" required>
-        <input name="water" placeholder="Water Level" required>
-        <input name="elevation" placeholder="Elevation" required>
+    <input name="rainfall" placeholder="Rainfall (mm)" required>
+    <input name="temperature" placeholder="Temperature (°C)" required>
+    <input name="humidity" placeholder="Humidity (%)" required>
 
-        <select name="land">
-            <option>Agricultural</option>
-            <option>Forest</option>
-            <option>Urban</option>
-        </select>
+    <input name="river_discharge" placeholder="River Discharge" required>
+    <input name="water_level" placeholder="Water Level" required>
+    <input name="elevation" placeholder="Elevation" required>
 
-        <select name="soil">
-            <option>Clay</option>
-            <option>Sandy</option>
-            <option>Loamy</option>
-        </select>
+    <select name="land">
+        <option>Agricultural</option>
+        <option>Forest</option>
+        <option>Urban</option>
+        <option>Water Body</option>
+    </select>
 
-        <input name="pop" placeholder="Population Density" required>
-        <input name="infra" placeholder="Infrastructure (0/1)" required>
-        <input name="history" placeholder="Historical Floods" required>
+    <select name="soil">
+        <option>Clay</option>
+        <option>Sandy</option>
+        <option>Loamy</option>
+        <option>Peat</option>
+    </select>
 
-        <button id="predictBtn" type="submit">🚀 Predict Risk</button>
-    </form>
+    <input name="population_density" placeholder="Population Density" required>
+    <input name="infrastructure" placeholder="Infrastructure (0/1)" required>
+    <input name="historical_floods" placeholder="Historical Floods" required>
 
+    <button id="predictBtn" type="submit">🚀 Predict Risk</button>
+</form>
     {% if prediction_text %}
     <div id="resultBox" class="result 
         {% if 'HIGH' in prediction_text %}high
